@@ -1,0 +1,73 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+def get_sitemap_urls(sitemap_url):
+
+    try:
+
+        response = requests.get(
+            sitemap_url,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            },
+            timeout=15
+        )
+
+        soup = BeautifulSoup(
+            response.content,
+            "xml"
+        )
+
+        urls = []
+
+        for loc in soup.find_all("loc"):
+            urls.append(loc.text.strip())
+
+        return urls
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+
+def main():
+
+    with open(
+        "sample_sitemap.txt",
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        sitemap_url = file.read().strip()
+
+    urls = get_sitemap_urls(
+        sitemap_url
+    )
+
+    total_urls = len(urls)
+
+    unique_urls = len(set(urls))
+
+    duplicate_urls = total_urls - unique_urls
+
+    report = pd.DataFrame({
+        "URL": urls
+    })
+
+    report.to_csv(
+        "sitemap_report.csv",
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    print("\n===== Sitemap Analysis =====")
+    print(f"Total URLs: {total_urls}")
+    print(f"Unique URLs: {unique_urls}")
+    print(f"Duplicate URLs: {duplicate_urls}")
+    print("\nReport Saved:")
+    print("sitemap_report.csv")
+
+
+if __name__ == "__main__":
+    main()
